@@ -2,6 +2,16 @@ import React from 'react';
 import './App.css';
 
 const App = () => {
+  const [formData, setFormData] = React.useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitStatus, setSubmitStatus] = React.useState(null);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
   const handleViewWork = () => {
     document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
   };
@@ -11,20 +21,74 @@ const App = () => {
     window.open('/Diane_RUTAGENGWA Resume.pdf', '_blank');
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitStatus({ type: 'success', message: data.message });
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        setSubmitStatus({ type: 'error', message: data.message });
+      }
+    } catch (error) {
+      setSubmitStatus({ 
+        type: 'error', 
+        message: 'Failed to send message. Please try again later.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMenuToggle = () => {
+    setMenuOpen(prev => !prev);
+  };
+  const handleMenuClose = () => {
+    setMenuOpen(false);
+  };
+
   return (
     <div className="portfolio">
       {/* Navbar */}
       <header className="navbar">
-        <h1>Diane RUTAGENGWA</h1>
-        <nav>
-          <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-          <div className="profile-icon">DR</div>
-        </nav>
+        <div className="navbar-content">
+          <h1>Diane RUTAGENGWA</h1>
+          <nav>
+            <button className={`hamburger${menuOpen ? ' open' : ''}`} onClick={handleMenuToggle} aria-label="Toggle menu">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            <ul className={menuOpen ? 'open' : ''}>
+              <li><a href="#about" onClick={handleMenuClose}>About</a></li>
+              <li><a href="#skills" onClick={handleMenuClose}>Skills</a></li>
+              <li><a href="#projects" onClick={handleMenuClose}>Projects</a></li>
+              <li><a href="#contact" onClick={handleMenuClose}>Contact</a></li>
+            </ul>
+            <div className="profile-icon">DR</div>
+          </nav>
+        </div>
       </header>
 
       {/* Hero Section */}
@@ -65,7 +129,7 @@ const App = () => {
           </div>
         </div>
         <div className="profile-image">
-          <img src="Profile.jpg" alt="Diane's profile" />
+          <img src="Profile.jpeg" alt="Diane's profile" />
           <div className="profile-overlay"></div>
         </div>
       </section>
@@ -309,7 +373,7 @@ const App = () => {
         </div>
         <div className="project-cards">
           <div className="project-card">
-            <div className="project-image">
+            <div className="project-mockup mockup-desktop">
               <img src="choir.png" alt="Choir Site" />
               <div className="project-overlay">
                 <div className="project-links">
@@ -327,11 +391,12 @@ const App = () => {
                 <span className="tech-tag">MongoDB</span>
                 <span className="tech-tag">Express</span>
               </div>
+              <div className="project-links overlay"></div>
             </div>
           </div>
 
           <div className="project-card">
-            <div className="project-image">
+            <div className="project-mockup mockup-mobile">
               <img src="Fitness.jpeg" alt="Fitness Tracker Mobile App" />
               <div className="project-overlay">
                 <div className="project-links">
@@ -349,11 +414,12 @@ const App = () => {
                 <span className="tech-tag">Firebase</span>
                 <span className="tech-tag">Redux</span>
               </div>
+              <div className="project-links overlay"></div>
             </div>
           </div>
 
           <div className="project-card">
-            <div className="project-image">
+            <div className="project-mockup mockup-desktop">
               <img src="todo.png" alt="Todo Planner" />
               <div className="project-overlay">
                 <div className="project-links">
@@ -371,11 +437,12 @@ const App = () => {
                 <span className="tech-tag">CSS3</span>
                 <span className="tech-tag">LocalStorage</span>
               </div>
+              <div className="project-links overlay"></div>
             </div>
           </div>
 
           <div className="project-card">
-            <div className="project-image">
+            <div className="project-mockup mockup-desktop">
               <img src="citizen.png" alt="Citizen System" />
               <div className="project-overlay">
                 <div className="project-links">
@@ -393,6 +460,7 @@ const App = () => {
                 <span className="tech-tag">PostgreSQL</span>
                 <span className="tech-tag">JWT</span>
               </div>
+              <div className="project-links overlay"></div>
             </div>
           </div>
         </div>
@@ -423,21 +491,60 @@ const App = () => {
               </div>
             </div>
           </div>
-          <form className="contact-form">
+          <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-group">
-          <input type="text" placeholder="Your Name" required />
+              <input 
+                type="text" 
+                name="name"
+                placeholder="Your Name" 
+                value={formData.name}
+                onChange={handleInputChange}
+                required 
+              />
             </div>
             <div className="form-group">
-          <input type="email" placeholder="Your Email" required />
+              <input 
+                type="email" 
+                name="email"
+                placeholder="Your Email" 
+                value={formData.email}
+                onChange={handleInputChange}
+                required 
+              />
             </div>
             <div className="form-group">
-              <input type="text" placeholder="Subject" required />
+              <input 
+                type="text" 
+                name="subject"
+                placeholder="Subject" 
+                value={formData.subject}
+                onChange={handleInputChange}
+                required 
+              />
             </div>
             <div className="form-group">
-              <textarea placeholder="Your Message" rows="5" required></textarea>
+              <textarea 
+                name="message"
+                placeholder="Your Message" 
+                rows="5" 
+                value={formData.message}
+                onChange={handleInputChange}
+                required
+              ></textarea>
             </div>
-            <button type="submit" className="submit-btn">Send Message</button>
-        </form>
+            {submitStatus && (
+              <div className={`submit-status ${submitStatus.type}`}>
+                {submitStatus.message}
+              </div>
+            )}
+            <button 
+              type="submit" 
+              className="submit-btn" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Message'}
+            </button>
+          </form>
         </div>
       </section>
 
